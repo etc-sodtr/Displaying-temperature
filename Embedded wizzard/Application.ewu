@@ -1,0 +1,178 @@
+$version 6.60
+
+// This is an inline code block.
+$rect <20,420,220,460>
+inline Inline
+{
+
+}
+
+// This is the root component of the entire GUI application.
+$rect <20,20,220,60>
+$output false
+class Application : Core::Root
+{
+  $rect <270,10,470,50>
+  inherited property Bounds = <0,0,240,320>;
+
+  // To do:
+  // 
+  // - The simplest way to compose the appearance of the application is to use the \
+  // 'Views' and 'Widget Sets' from the Gallery.
+  // 
+  // - To react to touch or keyboard events use the templates from the Gallery folder \
+  // 'Event Handlers'.
+  // 
+  // - To perform transitions (animations) use the templates from the Gallery folder \
+  // 'Effects'.
+  // 
+  // - To store values use the 'Variable', 'Array' and 'Property' templates available \
+  // in the Gallery folder 'Chora'.
+  // 
+  // - To implement behavior use the 'Method' and 'Slot Method' templates available \
+  // in the Gallery folder 'Chora'.
+  note legend Note1
+  {
+    attr Bounds = <10,350,790,550>;
+  }
+
+  // This is a filled rectangle view.
+  $rect <20,20,160,60>
+  object Views::Rectangle Rectangle
+  {
+    preset Bounds = <-10,0,240,320>;
+    preset Color = #000000FF;
+  }
+
+  // This is an ordinary text view.
+  $rect <20,20,160,60>
+  object Views::Text Text
+  {
+    preset Bounds = <10,20,172,52>;
+    preset AutoSize = true;
+    preset String = "Temperature:";
+    preset Font = Application::Font;
+  }
+
+  // This is a filled rectangle view.
+  $rect <20,20,160,60>
+  object Views::Rectangle Glas2
+  {
+    preset Bounds = <0,80,250,130>;
+    preset ColorBL = #FFFFFF00;
+    preset ColorBR = #FFFFFF00;
+    preset ColorTR = #FFFFFFA0;
+    preset ColorTL = #FFFFFFA0;
+  }
+
+  // This is a generic touch handler.
+  $rect <20,20,160,60>
+  object Core::SimpleTouchHandler SimpleTouchHandler1
+  {
+    preset Point4 = <0,0>;
+    preset Point3 = <240,0>;
+    preset Point2 = <240,320>;
+    preset Point1 = <0,320>;
+    preset OnPress = Touch;
+  }
+
+  // This is a slot method.
+  $rect <270,140,470,180>
+  slot Touch
+  {
+    sender; /* the method is called from the sender object */
+    if(Text.String=="Temperature:")
+    Text.String="Temperatura:" ;
+    else      
+    Text.String="Temperature:";
+
+  }
+
+  // This is a variable.
+  $rect <270,220,470,260>
+  var int32 Temper = 0;
+
+  // This is a timer object.
+  $rect <550,280,750,320>
+  object Core::Timer Timer
+  {
+    preset OnTrigger = Read_temp;
+    preset Period = 100;
+    preset Enabled = true;
+  }
+
+  // This is a slot method.
+  $rect <550,210,750,250>
+  $output STM32F429
+  slot Read_temp
+  {
+    sender; /* the method is called from the sender object */
+    var int32 temp; 
+                                   
+    Temper= Temper + 1;
+    Temp_display.String= string(Temper); 
+
+  }
+
+  // This is an ordinary text view.
+  $rect <20,20,160,60>
+  object Views::Text Temp_display
+  {
+    preset Bounds = <20,160,182,192>;
+    preset AutoSize = true;
+    preset String = "Temperature:";
+    preset Font = Application::Font1;
+  }
+}
+
+// To do:
+// 
+// - Open the 'Application' component for editing. It represents your entire GUI. \
+// Use widgets, views, event handlers and effects from the Gallery to assemble there \
+// your desired GUI look and feel.
+// 
+// - Create your own GUI components, widgets, panels, etc. The Gallery folder 'Components' \
+// contains for this purpose various templates you can simply add to the unit and \
+// thus start your own component development.
+// 
+// - You can add your own bitmap and font resources to the unit. Use the templates \
+// 'Bitmap Resource' and 'Font Resource' from the Gallery folder 'Components' for \
+// this purpose.
+// 
+// - You can add here also constants to store e.g. multilingual text fragments. Use \
+// for this purpose the template 'Constant' from the Gallery folder 'Chora'.
+// 
+// - To add an interface for communication with the target device use the template \
+// 'Device Interface' from the Gallery folder 'Device'.
+note legend Note1
+{
+  attr Bounds = <20,80,710,380>;
+}
+
+// This is a font resource.
+$rect <230,20,430,60>
+$output false
+resource Resources::Font Font
+{
+  attr fontname FontName = Arial;
+  attr fontheight Height = 32;
+  attr fontquality Quality = High;
+  attr fontranges Ranges = 0x20-0xFF;
+  attr fontaspectratio AspectRatio = 1.0;
+  attr fontbold Bold = false;
+  attr fontitalic Italic = false;
+}
+
+// This is a font resource.
+$rect <460,20,660,60>
+$output false
+resource Resources::Font Font1
+{
+  attr fontname FontName = Arial;
+  attr fontheight Height = 64;
+  attr fontquality Quality = High;
+  attr fontranges Ranges = 0x20-0xFF;
+  attr fontaspectratio AspectRatio = 1.0;
+  attr fontbold Bold = false;
+  attr fontitalic Italic = false;
+}
