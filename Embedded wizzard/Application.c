@@ -58,7 +58,13 @@ static const XRect _Const000C = {{ 20, 160 }, { 182, 192 }};
 static const XStringRes _Const000D = { _StringsDefault0, 0x0011 };
 
 /* This is an inline code block. */
-#include "tm_stm32f4_adc.h"
+#include "stm32f4xx_hal_dma.h"  
+#include "stm32f4xx_hal_adc.h" 
+#include "stm32f4xx_hal_gpio.h"
+#include "stm32f4xx.h"
+#include "stm32f4xx_hal_rcc.h"
+#include "stm32f4xx_hal.h"
+
 
 /* Initializer for the class 'Application::Application' */
 void ApplicationApplication__Init( ApplicationApplication _this, XObject aLink, XHandle aArg )
@@ -175,19 +181,19 @@ void ApplicationApplication_Touch( ApplicationApplication _this, XObject sender 
     ViewsText_OnSetString( &_this->Text, EwLoadString( &_Const0004 ));
 }
 
-/* This is a slot method. */
 void ApplicationApplication_Read_temp( ApplicationApplication _this, XObject sender )
 {
-  XInt32 temp;
-
+  XInt32 temp=0;
+  XInt32 g_MeasurementNumber=255;
+ 
   /* Dummy expressions to avoid the 'C' warning 'unused argument'. */
   EW_UNUSED_ARG( sender );
 
-  {
-    temp = 
-    TM_ADC_Read(ADC1, ADC_Channel_0);
-  }
-  _this->Temper = _this->Temper + 1;
+ _this->Temper = _this->Temper+1;
+			 
+          
+       
+  //_this->Temper = _this->Temper + 1;;
   ViewsText_OnSetString( &_this->Temp_display, EwNewStringInt( _this->Temper, 0 
   ));
 }
