@@ -70,7 +70,9 @@
 #if !defined  (STM32F4)
 #define STM32F4
 #endif /* STM32F4 */
-
+#if !defined(STM32F429xx)
+#define STM32F429xx
+#endif /* STM32F4 */
 /* Uncomment the line below according to the target STM32 device used in your
    application 
   */

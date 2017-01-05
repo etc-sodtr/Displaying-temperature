@@ -144,6 +144,36 @@ functionality.
 /* TODO Add any manufacture supplied header files necessary for CMSIS functions
 to be available here. */
 #include "stm32f4xx.h"
+#include"stm32f4xx_hal.h"
+#include"stm32f4xx_hal_adc.h"
+#include"stm32f4xx_hal_adc_ex.h"
+#include"stm32f4xx_hal_cortex.h"
+#include"stm32f4xx_hal_def.h"
+#include"stm32f4xx_hal_dma.h"
+#include"stm32f4xx_hal_dma2d.h"
+#include"stm32f4xx_hal_dma_ex.h"
+#include"stm32f4xx_hal_flash.h"
+#include"stm32f4xx_hal_flash_ex.h"
+#include"stm32f4xx_hal_flash_ramfunc.h"
+#include"stm32f4xx_hal_gpio.h"
+#include"stm32f4xx_hal_gpio_ex.h"
+#include"stm32f4xx_hal_i2c.h"
+#include"stm32f4xx_hal_i2c_ex.h"
+#include"stm32f4xx_hal_ltdc.h"
+#include"stm32f4xx_hal_ltdc_ex.h"
+#include"stm32f4xx_hal_pwr.h"
+#include"stm32f4xx_hal_pwr_ex.h"
+#include"stm32f4xx_hal_rcc.h"
+#include"stm32f4xx_hal_rcc_ex.h"
+#include"stm32f4xx_hal_sdram.h"
+#include"stm32f4xx_hal_spi.h"
+#include"stm32f4xx_hal_sram.h"
+#include"stm32f4xx_hal_tim.h"
+#include"stm32f4xx_hal_tim_ex.h"
+#include"stm32f4xx_hal_uart.h"
+#include"stm32f4xx_ll_fmc.h"
+#include"system_stm32f4xx.h"
+
 
 /* Priorities at which the tasks are created.  The event semaphore task is
 given the maximum priority of ( configMAX_PRIORITIES - 1 ) to ensure it runs as
@@ -208,10 +238,93 @@ static volatile uint32_t ulCountOfTimerCallbackExecutions = 0;
 static volatile uint32_t ulCountOfItemsReceivedOnQueue = 0;
 static volatile uint32_t ulCountOfReceivedSemaphores = 0;
 
+void SystemClock_Config(void)
+{
+
+	RCC_ClkInitTypeDef RCC_ClkInitStruct;
+	RCC_OscInitTypeDef RCC_OscInitStruct;
+
+	__HAL_RCC_PWR_CLK_ENABLE();
+	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
+
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+	RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+	RCC_OscInitStruct.PLL.PLLM = 8;
+	RCC_OscInitStruct.PLL.PLLN = 288;
+	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+	RCC_OscInitStruct.PLL.PLLQ = 6;
+	HAL_RCC_OscConfig(&RCC_OscInitStruct);
+
+	RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+	HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4);
+	SystemCoreClockUpdate();
+
+	if (HAL_GetREVID() == 0x1001)
+		__HAL_FLASH_PREFETCH_BUFFER_ENABLE();
+}
+ADC_HandleTypeDef g_AdcHandle;
+
+void ConfigureADC()
+{
+	GPIO_InitTypeDef gpioInit;
+
+	__GPIOC_CLK_ENABLE();
+	__ADC1_CLK_ENABLE();
+
+	gpioInit.Pin = GPIO_PIN_1;
+	gpioInit.Mode = GPIO_MODE_ANALOG;
+	gpioInit.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(GPIOC, &gpioInit);
+
+	HAL_NVIC_SetPriority(ADC_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(ADC_IRQn);
+
+	ADC_ChannelConfTypeDef adcChannel;
+
+	g_AdcHandle.Instance = ADC1;
+
+	g_AdcHandle.Init.ClockPrescaler = ADC_CLOCKPRESCALER_PCLK_DIV2;
+	g_AdcHandle.Init.Resolution = ADC_RESOLUTION_12B;
+	g_AdcHandle.Init.ScanConvMode = DISABLE;
+	g_AdcHandle.Init.ContinuousConvMode = ENABLE;
+	g_AdcHandle.Init.DiscontinuousConvMode = DISABLE;
+	g_AdcHandle.Init.NbrOfDiscConversion = 0;
+	g_AdcHandle.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+	g_AdcHandle.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T1_CC1;
+	g_AdcHandle.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+	g_AdcHandle.Init.NbrOfConversion = 1;
+	g_AdcHandle.Init.DMAContinuousRequests = ENABLE;
+	g_AdcHandle.Init.EOCSelection = DISABLE;
+
+	HAL_ADC_Init(&g_AdcHandle);
+
+	adcChannel.Channel = ADC_CHANNEL_11;
+	adcChannel.Rank = 1;
+	adcChannel.SamplingTime = ADC_SAMPLETIME_480CYCLES;
+	adcChannel.Offset = 0;
+
+	if (HAL_ADC_ConfigChannel(&g_AdcHandle, &adcChannel) != HAL_OK)
+	{
+		asm("bkpt 255");
+	}
+}
+uint32_t g_ADCValue;
+int g_MeasurementNumber;
 /*-----------------------------------------------------------*/
 
 int main(void)
 {
+	HAL_Init();
+    SystemClock_Config();
+    ConfigureADC();
+
+    HAL_ADC_Start(&g_AdcHandle);
 xTimerHandle xExampleSoftwareTimer = NULL;
 
 	/* Configure the system ready to run the demo.  The clock configuration
@@ -330,7 +443,11 @@ static void prvQueueReceiveTask( void *pvParameters )
 uint32_t ulReceivedValue;
 
 	for( ;; )
+	{if (HAL_ADC_PollForConversion(&g_AdcHandle, 1000000) == HAL_OK)
 	{
+		g_ADCValue = HAL_ADC_GetValue(&g_AdcHandle);
+		g_MeasurementNumber++;
+	}
 		/* Wait until something arrives in the queue - this task will block
 		indefinitely provided INCLUDE_vTaskSuspend is set to 1 in
 		FreeRTOSConfig.h.  http://www.freertos.org/a00118.html */
