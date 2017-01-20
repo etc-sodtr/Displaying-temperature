@@ -25,7 +25,7 @@
 #define FONTSIZE         Font12x12
 #define ADC3_DR_ADDRESS     ((uint32_t)0x4001224C)
 #define SENSOR_READY 120
-#define ALC_DET 2200
+#define ALC_DET 2500
 
 #define senzor_READ_PERIOD	( 200 / portTICK_RATE_MS )
 
@@ -75,7 +75,7 @@ int main(void)
 
     vSemaphoreCreateBinary( ADC_Semaphore );
 
-    xSemaphoreTake( ADC_Semaphore, 0 );
+    xSemaphoreTake( ADC_Semaphore, portMAX_DELAY );
 
 
 	xTaskCreate(   	display_ADC,
@@ -156,12 +156,12 @@ uint32_t adc_read_value = 0UL;
 
 		adc_read_value =  ADC_GetConversionValue(ADC3);
 
-		xQueueSend( xQueue, &adc_read_value, 0 );
-		count_second_INIT++;
+		xQueueSend( xQueue, &adc_read_value, portMAX_DELAY );
+
 
 
 	}
-	 }
+	}
 }
 /*-----------------------------------------------------------*/
 
